@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Skivira • Text Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="stylesheet" href="./main.css?v=20251104c" />
+</head>
+
+<body>
+  <header>
+    <h1>Skivira • Text Chat</h1>
+    <div class="toolbar">
+      <button id="clearBtn" class="ghost" title="Clear chat" type="button">New Chat</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="log"></div>
+    <footer>
+      <div id="status">Ready. Hint: press Shift+Enter for a new line.</div>
+      <div id="inputWrap">
+        <textarea id="prompt" placeholder="Type your question…"></textarea>
+        <button id="sendBtn" class="primary" type="button">Send</button>
+      </div>
+    </footer>
+  </main>
+
+  <script src="./viewport-fix.js?v=20251104c"></script>
+  <script src="./app.js?v=20251104c" defer></script>
+
+  <select id="model" style="display:none"></select>
+</body>
+
+</html>
