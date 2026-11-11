@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Skivira • Voice Call</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="stylesheet" href="./main.css?v=20251104c" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+  <script type="importmap">
+    { "imports": { "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0" } }
+  </script>
+  <script type="module" src="https://aistudiocdn.com/@google/genai@^1.28.0"></script>
+</head>
+
+<body>
+  <header>
+    <h1>Skivira • Voice Call</h1>
+  </header>
+
+  <main>
+    <div id="log" class="log"></div>
+  </main>
+
+  <footer>
+    <div id="status" class="ok">Ready.</div>
+    <div id="callControls">
+      <button id="callBtn" class="primary" type="button">CALL</button>
+      <button id="endBtn" type="button">END</button>
+    </div>
+  </footer>
+
+  <script src="./viewport-fix.js?v=20251104c"></script>
+  <script src="./WebRTC.js?v=20251105" type="module"></script>
+  <script src="./app.js?v=20251105a" type="module"></script>
+
+  <audio id="ringtone" src="./ringtone.mp3" preload="auto"></audio>
+</body>
+
+</html>
