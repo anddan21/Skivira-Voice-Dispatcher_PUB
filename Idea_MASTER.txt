@@ -1,0 +1,114 @@
+Idea_MASTER.txt — Skivira Voice Dispatcher (AI phone dispatcher)
+Date: 2025-10-28
+# === Update from 2025-10-29 00:28 ===
+# Brand and project positioning
+Official name (EN): Skivira Voice Dispatcher
+Official name (RU): Skivira Voice Dispatcher
+Subtitle (EN): AI voice dispatcher for inbound calls and orders
+Subtitle (RU): AI voice dispatcher for inbound calls and orders
+Abbreviation/slug: SVD / skivira-voice-dispatcher
+Note: "Voice" is broader than "Call", so we maintain flexibility for WhatsApp/web-calls/chat.
+
+
+1) Short overview
+Goal: to create a voice dispatcher that takes inbound calls, answers product questions, places orders, fills out spreadsheets, sends confirmations, and transfers to a live operator if necessary. We start with a limited set of scenarios and expand functionality in layers.
+
+2) What is already real in 2025
+- Live conversation with interruptions and pauses, natural clarifications.
+- Understanding of free speech with accents and noise at a call center level.
+- Function calls from dialogue: checking price and availability, creating an order, writing to a spreadsheet, sending SMS and e-mail.
+- Call management: hold, transfer, callback.
+
+3) Architecture
+Telephony
+- SIP or a provider like Twilio or Plivo. Preferably a media stream via WebSocket to the backend.
+
+Real-time pipeline
+- STT — streaming speech recognition. Partial hypotheses every 200–400 ms.
+- Pause and interruption detector. The bot goes silent when the client can be heard.
+- LLM with tools. The model does not fantasize, but calls functions.
+- TTS with streaming. The voice starts speaking quickly and can stop instantly upon interruption.
+
+Integrations
+- Google Sheets or a database for recording orders.
+- Website or CRM for assortment and prices.
+- Address and ZIP code validation.
+- SMS and e-mail for confirmations.
+
+Conversation state
+- A single CallState with explicit slots and flags. Example:
+{
+  "caller": {"phone": "", "name": "", "locale": "ru-RU"},
+  "intent": "create_order",
+  "slots": {"product": "", "qty": 1, "address": "", "datetime": ""},
+  "cart": [{"sku": "", "name": "", "qty": 1, "price": 0}],
+  "meta": {"consent_recording": true, "handoff": false}
+}
+
+4) Key challenges and how to beat them
+- Latency. Aim for a response in 1–2 seconds. Use a two-way stream and short phrases.
+- Complex entities: addresses, names, SKUs. Spelling out mode. NATO alphabet or common names for letters can be used.
+- Clear confirmations. Before creating an order, repeat all fields in one block and ask for confirmation.
+- Talkative clients. Summary. Briefly retell and ask if correct.
+- Payment. Do not dictate cards to the bot. Either a secure IVR with a number pad or a secure link via SMS.
+- Recording and the law. California requires the consent of both parties. A phrase about recording and its purpose at the beginning. If refused, turn off recording.
+- Escalation. After several unsuccessful attempts or intent conflicts, transfer to a human.
+
+5) MVP area of responsibility
+- Inbound calls. 5–10 typical tasks: talk about the product, check availability, place an order, take address and time, send SMS and e-mail, transfer to operator.
+- Payment by link. Outbound calls and complex scenarios will be added later.
+
+Strict AI rules
+- Short replicas. One thought at a time.
+- Always confirm before saving an order.
+- Does not invent. If there is no data, clarifies or transfers to a human.
+- Any structure first into CallState, then confirmation, then function call.
+
+6) Mini-spec of functions for LLM
+[
+  {"name":"get_product_info","args":{"query":"string"}},
+  {"name":"check_inventory","args":{"sku":"string","qty":"number"}},
+  {"name":"create_order","args":{"customer":{"name":"string","phone":"string","address":"string"},"items":[{"sku":"string","qty":"number"}],"delivery_time":"string"}},
+  {"name":"append_to_sheet","args":{"row":"object"}},
+  {"name":"send_sms","args":{"to":"string","text":"string"}},
+  {"name":"handoff_to_human","args":{"reason":"string"}}
+]
+
+7) Example of a dialogue with interruption
+Client: Hello. Do you have AquaPro water filters, three pieces...
+Bot: Yes. Let me clarify the model. Do you need the AP-100 or AP-200 series
+Client interrupts: AP-200, and deliver to...
+Bot goes silent and listens. Then: We have AP-200. Three pieces. Delivery today by six is possible. Tell me the address
+Client dictates the address.
+Bot: Repeating. Three AP-200s. Address Ocean Avenue 123, Santa Monica. Deliver by six. Do you confirm
+Client: Yes
+Actions: create_order, write to spreadsheet, SMS with order number.
+
+8) Quality and control
+- Metrics. Share of tasks without human intervention. Average processing time. Number of repeats and escalations.
+- Test sets. Accents, noise, half-heard addresses, similar SKUs, numbers, and dates.
+- Log. Transcript, function calls, final records. We store personal data only when necessary and within time limits.
+
+9) Security and privacy
+- Card numbers and CVV do not pass through LLM. Either IVR or payment link.
+- Call recording only after explicit consent. We inform about the storage location and deletion method.
+- If the domain is medicine or finance, narrow scenarios and legal consent text are mandatory.
+
+10) What to choose immediately
+- Telephony provider.
+- A pair of STT and TTS for quality and speed.
+- Where to store product knowledge. Spreadsheet, database, or search index.
+- List of first intents and slots.
+- Texts for greeting and recording disclaimer.
+
+11) Scenario outline: Product Order
+Step 1. Greeting. Message about recording and how the assistant can help.
+Step 2. Identifying intent. Place an order, check price, clarify delivery.
+Step 3. Collecting entities. Product, quantity, address, time, contact details.
+Step 4. Confirmation in one block.
+Step 5. Call create_order, write to spreadsheet, send SMS and e-mail with order number and payment link.
+Step 6. Closing. Gratitude and instructions on how to contact if changes arise.
+
+Notes
+- We build in layers. We start with simple scenarios and bring them to metric stability.
+- The goal of the first release is stable answers and correct recording of orders into the spreadsheet.

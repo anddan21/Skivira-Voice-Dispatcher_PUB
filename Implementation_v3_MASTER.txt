@@ -1,0 +1,201 @@
+--------------------
+PROJECT DATA & KEYS (Session Log)
+--------------------
+# VM / Server
+VM IP Address (Current): (stored outside the repo)
+Domain: skivira-server.andzab.com
+VM Specs: e2-micro (Free Tier)
+VM OS: Ubuntu 22.04 LTS (x86/64)
+VM Region: us-central1
+VM Login User: anddan71
+
+# SSH public key is kept on the server only, not in this repo.
+
+# Paths
+Server Code Path: /var/www/skivira/skivira-server/
+Nginx Config: /etc/nginx/sites-available/skivira
+PM2 App Name: skivira-app
+Logs Path: /var/www/skivira/skivira-server/data/chat-logs/
+
+--------------------
+Implementation v3 (Voice) - Skivira
+--------------------
+GOAL: Integrate Gemini Live (ai.live.connect) for real-time voice chat.
+STATUS: Phase 8 COMPLETE. Awaiting Phase 9 definition.
+
+KEY FILES:
+- /server.js (Node.js backend)
+- /phone.js (NEW: Twilio IVR Logic)
+- /Public/call/index.html (UI)
+- /Public/call/app.js (UI Logic)
+- /Public/call/WebRTC.js (Gemini Live Client)
+- /Public/call/main.css (UI Styles)
+- /Public/call/viewport-fix.js (Mobile UI Fix)
+- /config/instructions/dispatcher.txt (AI Prompt)
+- /config/instructions/price.txt (Pricing/Payment)
+- /callLogger.js (Voice log saver)
+- /textLogger.js (Text log saver)
+
+--------------------
+PHASE 1: CLIENT-SIDE (UI & LOGIC) - DONE
+--------------------
+[x] 1.1 UI: Create basic HTML structure (index.html)
+[x] 1.2 UI: Basic CSS styling (main.css)
+[x] 1.3 UI: Viewport Fix (viewport-fix.js)
+[x] 1.4 UI: App Logic (app.js)
+[x] 1.9 UI: UX Fixes (Button colors, widths, clear on call)
+STATUS: DONE
+
+--------------------
+PHASE 2: WebRTC CLIENT (WebRTC.js) - DONE
+--------------------
+[x] 2.1 Core: Implement Gemini Live
+[x] 2.2 
+Core: 
+
+Implement TTS Greeting 
+(generateAndPlayGreeting)
+[x] 2.3 UX: 
+Pause on Tab Switch (Page Visibility API)
+[x] 2.4 Bugfix: Double Greeting (Filtered /start from dispatcher)
+[x] 2.5 Bugfix: Race Conditions (currentCallId token, null context checks)
+[x] 2.6 Bugfix: Prevent duplicate "Connection closed" messages (clientInitiatedStop flag)
+STATUS: DONE
+
+--------------------
+PHASE 3: BACKEND (server.js) - DONE
+--------------------
+[x] 3.1 Core: Create server.js (Static, /api/gemini-key, /api/instructions)
+[x] 3.2 File Structure: Move WebRTC.js to /Public/call/
+[x] 3.3 Logging: Add /api/save-chat (voice) & /api/save-text-chat (text) endpoints
+STATUS: DONE
+
+--------------------
+PHASE 4: AI PROMPTING (dispatcher.txt) - DONE
+--------------------
+[x] 4.1 Core: Basic Role & Scope
+[x] 4.2 Language & Tone (Fix "прибор" -> "техника")
+[x] 4.3 Command: /start (Restricted to text-chat only)
+[x] 4.4 Rules: Out-of-Scope 
+(No 
+
+operator transfer)
+[x] 4.5 
+Rules: AI Hangup 
+([END_OF_CALL] signal) 
+STATUS: ABANDONED (See "Lessons Learned")
+
+--------------------
+PHASE 5: DEPLOYMENT - DONE
+--------------------
+[x] 5.1 VM Creation (IP stored outside the repo)
+[x] 5.2 Domain & DNS (skivira-server.andzab.com)
+[x] 5.3 Server Setup (Nginx, Node, PM2, Certbot)
+[x] 5.4 Code Deployment (Server running on port 5500)
+[x] 5.5 HTTPS Setup (Nginx proxy_pass & Certbot)
+[x] 5.6 Mobile Fix (HTTPS) (Microphone confirmed working)
+STATUS: DONE
+
+--------------------
+PHASE 6: LOGGING & UX IMPROVEMENTS - DONE
+--------------------
+[x] 6.1 Logging: Implement callLogger.js to save chats to .txt
+[x] 6.2 Logging: Add system messages ("Connection closed by Caller", "Call ended due to inactivity")
+[x] 6.3 Logging: Do NOT save log if user has not spoken
+[x] 6.4 
+UX: 
+
+Change "CALL" button 
+text to "SPEAK" 
+when active 
+[x] 6.5 UX: Align "Disconnected."
+status text with "CALL" button 
+[x] 6.6 Hangup: Implement 60-second silence timer to force endCall()
+[x] 6.7 Code: Remove all Russian console.log messages
+[x] 6.8 UX: Remove /start command, add auto-greeting (Text Chat)
+[x] 6.9 Logging: Implement textLogger.js (with _chat suffix)
+[x] 6.10 Logging: Implement Session ID logic (one file per session, auto-update) (Text Chat)
+[x] 6.11 Logging: Add auto-save on tab switch (visibilitychange) and close (beforeunload) (Text Chat)
+[x] 6.12 Logging: Do NOT save log if user has not spoken (Text Chat)
+[x] 6.13 Code: Remove all Russian console.log messages (Text Chat)
+STATUS: DONE
+
+--------------------
+PHASE 7: CONFIG REFACTOR & PROMPT FINALIZING 
+- DONE
+--------------------
+[x] 7.1 Config: Remove all hardcoded 
+
+
+
+model names (LIVE_MODEL, TTS_MODEL) from WebRTC.js.
+[x] 7.2 Config: Move all client-side config (greetingText, ttsVoiceName) from WebRTC.js to server .env file.
+[x] 7.3 Config: Update /api/model endpoint to serve all new .env variables (liveModel, ttsModel, greetingText, voiceName).
+[x] 7.4 Server: Update server.js (loadInstructions) to read *all* .txt files from /config/instructions/, ensuring dispatcher.txt is first.
+[x] 7.5 Content: Create price.txt with $95 fee policy.
+[x] 7.6 Content: Update price.txt with accepted payment methods (Cash, Check, Cards) and exclusions (Zelle, PayPal).
+[x] 7.7 Prompt (Dispatcher): Add combined check for 'Apartment Number' + 'Gate Code' after address collection.
+[x] 7.8 Prompt (Dispatcher): Fix bot stating "city not required" to user.
+[x] 7.9 Prompt (Dispatcher): Remove "supervisor" transfer offer for out-of-service ZIP codes.
+[x] 7.10 Prompt (Dispatcher): Implement High-Priority "Human Request Rule" (Stop flow, ask for Name, Phone, Reason).
+[x] 7.11 Prompt (Dispatcher): Add rule to state $95 service fee *before* asking for the address.
+[x] 7.12 Logging (Voice): Refactor save triggers. Removed silence-timer & tab-close. Kept 'END' button, SDK Error. Added 'AI Response Complete'.
+[x] 7.13 Logging (Text): Refactor save triggers. Removed tab-switch & tab-close. Kept 'New Chat' button. Added 'AI Response Complete'.
+STATUS: DONE
+
+--------------------
+LESSONS LEARNED (Written on the forehead)
+--------------------
+
+1.  **AI HANGUP LOGIC (FAILURE):** My attempts to force the AI to terminate the call failed.
+* **Attempt 1: `[END_OF_CALL]` tag.** Failed. AI cannot "pronounce" a technical tag.
+* **Attempt 2: "Stop Phrase" (e.g., "Thank you! Have a nice day!").** Failed.
+This rule comes into **conflict** with the primary AI rule "Answer in the user's language".
+The AI sees "goodbye" in Russian and answers in Russian, ignoring the command to speak in English.
+* **Conclusion:** You cannot trust conversational AI to blindly execute technical commands if they conflict with its primary tasks.
+The only reliable termination methods:
+        * **Silence timer (60 sec):** Implemented. Works.
+* **"AI-Moderator":** (Postponed) The idea to use a second, separate API call to classify (`HANGUP`/`CONTINUE`) remains the only reliable, albeit costly, solution for *active* (spam/hooligan) termination.
+2.  **CODE LANGUAGE:** The code (`.js` files) must not contain `console.log` messages in Russian. Only English.
+Comments in Russian are allowed, but output to the console is not.
+3.  **FILE OUTPUT:** I must provide complete files, not fragments, unless there is an explicit request to the contrary.
+--------------------
+PHASE 8: PSTN INTEGRATION (TWILIO - HYBRID IVR) - DONE
+--------------------
+GOAL: Connect server to Twilio.
+Use Twilio STT (`<Gather>`) for input, but use Google TTS (`<Play>`) for high-quality voice output.
+NOTE: This "Hybrid Plan" sacrifices speed (adds latency) for voice quality.
+We abandoned the "Simple Plan" (Twilio TTS) due to poor voice quality.
+[x] 8.1: Twilio Setup (External)
+    [x] 8.1.1: Create Twilio Account and verify Business Profile.
+[x] 8.1.2: Purchase a US Local Phone Number.
+    [x] 8.1.3: Install `twilio` and `@google/generative-ai` Node.js SDKs.
+[x] 8.2: Server - Hybrid TTS & Endpoints (WIP)
+    [x] 8.2.1: Create `phone.js` module to modularize Twilio logic.
+[x] 8.2.2: Create endpoints `POST /api/phone/incoming` and `POST /api/phone/turn`.
+    [x] 8.2.3: Configure Twilio webhook to use `ngrok` for local testing.
+[x] 8.2.4: Implement `callGoogleTTS` in `phone.js` using Google SDK to generate MP3s (using `AI_MODEL_TTS`).
+[x] 8.2.5: Implement `generateAndPlayAudio` to save MP3 to `/Public/temp-audio/`.
+    [x] 8.2.6: Add `PUBLIC_SERVER_URL` to `.env` for `ngrok` file serving.
+[x] 8.2.7: Implement TwiML logic to use `<Play>` (for Google TTS) inside `<Gather>`.
+[x] 8.2.8: Debugged `API key not valid`, `not a constructor`, and `Bad Request "config"` errors by switching to correct server-side SDK syntax in `phone.js`.
+[x] 8.3: Server - Conversation Logic
+    [x] 8.3.1: Hook `<Gather>` STT (`SpeechResult`) to `callGeminiGenerate` (using `AI_MODEL_PHONE`).
+[x] 8.3.2: Implement multi-language STT (`language: 'en-US, ru-RU'`).
+
+[x] 8.4: Security & Anti-Abuse (Hooligan Protection)
+    [x] 8.4.1 (Silence): Implement hangup on empty `SpeechResult` (timeout).
+[ ] 8.4.2 (Looping): Implement "Strike Counter" (postponed by user).
+[x] 8.5: Logging
+    [x] 8.5.1: Integrate `callLogger.js`.
+[x] 8.5.2: Save text transcript on hangup/timeout.
+[x] 8.6: Cleanup & Refinement
+    [x] 8.6.1: (WIP) Test "slow voice" issue.
+Current theory: 24kHz file being played at 8kHz by Twilio.
+        **[NOTE 2025-11-11: Problem solved.
+The voice works fine without transcoding.]**
+    [x] 8.6.2: Add server-side transcoding (`ffmpeg`) to convert 24kHz MP3 -> 8kHz MP3/ULAW to fix "slow voice".
+**[NOTE 2025-11-11: ABANDONED. Not required, see 8.6.1.]**
+    [x] 8.6.3: Add a cron job or logic to delete old files from `/Public/temp-audio/`.
+**[NOTE 2025-11-11: DONE. Files deleted manually.]**
+STATUS: DONE
