@@ -74,7 +74,7 @@ STATUS: DONE
 PHASE 4: AI PROMPTING (dispatcher.txt) - DONE
 --------------------
 [x] 4.1 Core: Basic Role & Scope
-[x] 4.2 Language & Tone (Fix "прибор" -> "техника")
+[x] 4.2 Language & Tone (Fix Russian wording: "pribor" -> "tekhnika", i.e. "device" -> "appliance")
 [x] 4.3 Command: /start (Restricted to text-chat only)
 [x] 4.4 Rules: Out-of-Scope 
 (No 
