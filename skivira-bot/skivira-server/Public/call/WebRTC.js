@@ -1,16 +1,16 @@
-// WebRTC.js - Клиентская логика для Gemini Live API (ai.live.connect)
-// ТЕПЕРЬ ЭТО ES-МОДУЛЬ (с 2-х этапным запуском)
+// WebRTC.js: client logic for the Gemini Live API (ai.live.connect)
+// ES module with two stage startup
 
 import { GoogleGenAI, Modality } from "@google/genai";
 
 const Live = {};
 
-// --- Глобальные переменные ---
-let ai; // Инициализируется один раз
-let apiKey; // Храним ключ
-let systemInstructionText; // Храним инструкции
-let liveModelName; // Имя Live модели из .env
-let ttsModelName; // Имя TTS модели из .env
+// --- Global variables ---
+let ai; // Initialized once
+let apiKey; // API key
+let systemInstructionText; // System instructions
+let liveModelName; // Live model name from .env
+let ttsModelName; // TTS model name from .env
 let greetingText; // Greeting text from .env
 let ttsVoiceName; // Voice name from .env
 

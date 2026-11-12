@@ -32,7 +32,7 @@
     // CSS (flex: 1) in main.css will automatically fill
     // <main> with the #log element.
     
-    /* (Старый код удален)
+    /* (Old code removed)
     let used = 0;
     if (footer()) used += footer().offsetHeight || 0;
     const logH = Math.max(120, mainH - used); 

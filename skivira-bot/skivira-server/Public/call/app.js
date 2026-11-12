@@ -1,5 +1,5 @@
-// Skira Voice Call UI — Управляет WebRTC.js (Gemini Live)
-// ТЕПЕРЬ ЭТО ES-МОДУЛЬ (с 2-х этапным запуском)
+// Skivira Voice Call UI: drives WebRTC.js (Gemini Live)
+// ES module with two stage startup
 
 import { SkiviraLive } from './WebRTC.js';
 
@@ -17,16 +17,16 @@ let silenceTimer = null;
 const SS_SESSION_ID = 'skivira_call_session_id';
 let currentCallSessionId = null;
 
-// --- Управление чатом (без изменений) ---
+// --- Chat state ---
 let chat = loadChat();
 function loadChat() {
   return [];
 }
 function saveChat() {
-  // (не используется)
+  // (not used)
 }
 
-// --- Генератор ID (без изменений) ---
+// --- ID generator ---
 function getTimestampSessionId() {
   const pad2 = (n) => (n < 10 ? '0' : '') + n;
   const d = new Date();
@@ -39,7 +39,7 @@ function getTimestampSessionId() {
   return `${Y}-${M}-${D}_${h}-${m}-${s}_call`;
 }
 
-// --- addTranscriptEntry (Сохраняет по ответу ИИ) ---
+// --- addTranscriptEntry (saves after each AI reply) ---
 function addTranscriptEntry(entry) {
   const lastUnfinished = chat.findLast(
     (m) => m.sender === entry.sender && !m.isFinal
@@ -65,10 +65,10 @@ function addTranscriptEntry(entry) {
   }
   else if (entry.sender === 'assistant' && entry.isFinal) {
 
-    // <--- СОХРАНЕНИЕ (1/3): ПОСЛЕ ОТВЕТА ИИ ---
+    // <--- SAVE (1/3): AFTER AI REPLY ---
     console.log('[SaveChat] Turn complete. Saving log...');
     saveChatLog(chat);
-    // <--- КОНЕЦ ИЗМЕНЕНИЯ ---
+    // <--- END OF CHANGE ---
 
     console.log('[SilenceTimer] AI finished, 60s timer started...');
     clearTimeout(silenceTimer);
@@ -76,12 +76,12 @@ function addTranscriptEntry(entry) {
     silenceTimer = setTimeout(() => {
       console.warn('[SilenceTimer] 60s timeout reached. Forcing hangup.');
       addTranscriptEntry({ sender: 'system', text: 'Call ended due to inactivity.', isFinal: true });
-      endCall(); // <-- endCall не сохраняет
+      endCall(); // <-- endCall does not save
     }, 60000);
   }
 }
 
-// --- Рендеринг (без изменений) ---
+// --- Rendering ---
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -114,7 +114,7 @@ function setStatus(text, ok = true, err = false) {
   statusEl.className = ok ? 'ok' : err ? 'error' : '';
 }
 
-// --- Функция saveChatLog (без изменений) ---
+// --- saveChatLog ---
 async function saveChatLog(history) {
   const hasUserMessages = history.some(m => m.sender === 'user');
   if (!hasUserMessages) {
@@ -150,7 +150,7 @@ async function saveChatLog(history) {
   }
 }
 
-// --- playAudioAndWait (без изменений) ---
+// --- playAudioAndWait ---
 function playAudioAndWait(audioElement) {
   if (!audioElement) {
     console.warn('Ringtone element not found.');
@@ -182,7 +182,7 @@ function playAudioAndWait(audioElement) {
   });
 }
 
-// --- Логика кнопок (Call / End) ---
+// --- Button logic (Call / End) ---
 
 async function startCall() {
   clearTimeout(silenceTimer);
@@ -243,7 +243,7 @@ async function startCall() {
   }
 }
 
-// --- endCall (без изменений, НЕ сохраняет) ---
+// --- endCall (does NOT save) ---
 function endCall() {
   if (callBtn.textContent !== 'CONNECTING...' && !callActive) {
     return;
@@ -267,20 +267,20 @@ function endCall() {
 // ===== UI wiring =====
 callBtn.onclick = startCall;
 
-// <--- ИЗМЕНЕНО: endBtn.onclick ТЕПЕРЬ СНОВА СОХРАНЯЕТ ---
+// <--- CHANGED: endBtn.onclick saves the log again ---
 endBtn.onclick = () => {
-  // 1. Добавляем сообщение о причине
+  // 1. Add a message with the reason
   addTranscriptEntry({ sender: 'system', text: 'Connection closed by Caller.', isFinal: true });
 
-  // <--- СОХРАНЕНИЕ (2/3): ПО НАЖАТИЮ "END" ---
+  // <--- SAVE (2/3): ON "END" CLICK ---
   console.log('[SaveChat] "END" button pressed. Saving log...');
   saveChatLog(chat);
-  // <--- КОНЕЦ ИЗМЕНЕНИЯ ---
+  // <--- END OF CHANGE ---
 
-  // 3. Завершаем звонок
+  // 3. End the call
   endCall();
 };
-// <--- КОНЕЦ ИЗМЕНЕНИЯ ---
+// <--- END OF CHANGE ---
 
 window.callApp = {
   startNewChat() {
@@ -305,16 +305,16 @@ window.callApp = {
     ringtoneEl: ringtoneEl,
     onStatus: (s, ok, err) => setStatus(s, ok, err),
 
-    // <--- СОХРАНЕНИЕ (3/3): ПРИ ОШИБКЕ SDK ---
+    // <--- SAVE (3/3): ON SDK ERROR ---
     onError: (e) => {
       setStatus(String(e.message || e), false, true);
       if (callActive) {
         console.error('[SaveChat] Saving log due to critical error...');
-        saveChatLog(chat); // <--- Сохраняем здесь
+        saveChatLog(chat); // <--- Save here
         endCall();
       }
     },
-    // <--- КОНЕЦ ИЗМЕНЕНИЯ ---
+    // <--- END OF CHANGE ---
 
     addTranscriptEntry: addTranscriptEntry,
     onHangupRequest: null
@@ -329,7 +329,7 @@ window.callApp = {
     console.error('[App] SkiviraLive SDK failed to initialize.');
   }
 
-  // <--- УДАЛЕНЫ обработчики visibilitychange и beforeunload ---
+  // <--- REMOVED: visibilitychange and beforeunload handlers ---
   document.addEventListener('visibilitychange', () => {
     if (!callActive) {
       return;
