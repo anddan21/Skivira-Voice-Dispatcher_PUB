@@ -11,19 +11,19 @@ const clearBtn = $('#clearBtn');
 
 const LS_CHAT = 'skivira_chat_history';
 const LS_MODEL = 'skivira_last_model';
-const SS_SESSION_ID = 'skivira_chat_session_id'; // <-- Ключ для Session Storage
+const SS_SESSION_ID = 'skivira_chat_session_id'; // <-- Session Storage key
 let AI_API_KEY = ''; // used only to list models
 
-// --- ИЗМЕНЕНИЕ: Убираем резервный вариант ---
-let serverGreetingText = ''; // (Будет загружено с /api/model)
+// --- CHANGE: no fallback greeting ---
+let serverGreetingText = ''; // (Loaded from /api/model)
 
 let chat = loadChat();
-let currentChatSessionId = null; // <-- ID сессии
+let currentChatSessionId = null; // <-- Session ID
 
 function loadChat() { try { return JSON.parse(localStorage.getItem(LS_CHAT)) ?? []; } catch { return []; } }
 function saveChat() { localStorage.setItem(LS_CHAT, JSON.stringify(chat)); }
 
-// --- НОВАЯ ФУНКЦИЯ: Генератор ID (переехала из textLogger.js) ---
+// --- NEW: ID generator (moved from textLogger.js) ---
 function getTimestampSessionId() {
   const pad2 = (n) => (n < 10 ? '0' : '') + n;
   const d = new Date();
@@ -36,13 +36,13 @@ function getTimestampSessionId() {
   return `${Y}-${M}-${D}_${h}-${m}-${s}_chat`;
 }
 
-// --- ИЗМEHEHИE: addGreeting (теперь использует переменную) ---
+// --- CHANGE: addGreeting (now uses a variable) ---
 function addGreeting() {
-  // const greetingText = '...'; // <-- УДАЛЕНО
-  chat = []; // Очищаем
+  // const greetingText = '...'; // <-- REMOVED
+  chat = []; // Clear
   chat.push({
     role: 'assistant',
-    content: serverGreetingText, // <-- ИЗМEHEHO
+    content: serverGreetingText, // <-- CHANGED
     ts: Date.now()
   });
   currentChatSessionId = getTimestampSessionId();
@@ -53,7 +53,7 @@ function addGreeting() {
   if (promptEl) promptEl.focus();
 }
 
-// --- Функция сохранения лога ---
+// --- Save log ---
 async function saveChatLog(history) {
   const hasUserMessages = history.some(m => m.role === 'user');
   if (!hasUserMessages) {
@@ -88,10 +88,10 @@ async function saveChatLog(history) {
   }
 }
 
-// <--- УДАЛЕНО: Функция saveChatLogBeacon ---
-// (Больше не нужна, т.к. убрали 'beforeunload')
+// <--- REMOVED: saveChatLogBeacon ---
+// (No longer needed since 'beforeunload' was removed)
 
-// ... (el, render, setStatus, setSending без изменений) ...
+// ... (el, render, setStatus, setSending) ...
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -129,15 +129,15 @@ function setSending(disabled) {
 // prevent button from stealing focus on click
 sendBtn?.addEventListener('mousedown', e => e.preventDefault());
 
-// --- СОХРАНЕНИЕ (1/2): Нажатие "New Chat" ---
+// --- SAVE (1/2): "New Chat" click ---
 clearBtn?.addEventListener('click', async () => {
-  // 1. Сначала сохраняем текущий чат (со старым ID)
+  // 1. First save the current chat (with the old ID)
   //await saveChatLog(chat); //
-  // 2. Затем начинаем новый (addGreeting создаст новый ID)
+  // 2. Then start a new one (addGreeting creates a new ID)
   addGreeting();
 });
 
-// ... (toGeminiContents и др. вспомогательные функции без изменений) ...
+// ... (toGeminiContents and other helpers) ...
 function toGeminiContents(history) {
   const contents = [];
   for (const m of history) {
@@ -181,7 +181,7 @@ async function send() {
   if (!text) return;
 
   chat.push({ role: 'user', content: text, ts: Date.now() });
-  saveChat(); render(); // Сохраняем в localStorage
+  saveChat(); render(); // Save to localStorage
   if (promptEl) { promptEl.value = ''; promptEl.focus(); }
 
   setSending(true);
@@ -208,15 +208,15 @@ async function send() {
       .join('').trim() || '[empty response]';
 
     chat.push({ role: 'assistant', content: textOut, ts: Date.now() }); //
-    saveChat(); render(); // Сохраняем в localStorage
+    saveChat(); render(); // Save to localStorage
     localStorage.setItem(LS_MODEL, modelEl.value);
     setStatus('Done.', true);
 
-    // <--- НАЧАЛО ИЗМЕНЕНИЯ: ---
-    // --- СОХРАНЕНИЕ (2/2): После ответа ИИ ---
+    // <--- START OF CHANGE: ---
+    // --- SAVE (2/2): after AI reply ---
     console.log('[SaveChat] Turn complete. Saving log...');
-    saveChatLog(chat); // Сохраняем на сервере
-    // <--- КОНЕЦ ИЗМЕНЕНИЯ ---
+    saveChatLog(chat); // Save on the server
+    // <--- END OF CHANGE ---
 
   } catch (e) {
     chat.push({ role: 'assistant', content: `Error: ${String(e.message || e)}`, ts: Date.now() });
@@ -226,9 +226,9 @@ async function send() {
   }
 }
 
-// --- ИЗМЕНЕНО: boot (логика ID сессии И ЗАГРУЗКА ПРИВЕТСТВИЯ) ---
+// --- CHANGED: boot (session ID logic AND greeting loading) ---
 (async () => {
-  // --- НОВОЕ: Сначала загружаем конфиг (включая приветствие) ---
+  // --- NEW: load the config first (including the greeting) ---
   try {
     const modelRes = await fetch('/api/model');
     if (modelRes.ok) {
@@ -245,32 +245,32 @@ async function send() {
   } catch (e) {
     console.warn('[Boot] Network error fetching /api/model.', e.message);
   }
-  // --- КОНЕЦ НОВОГО ---
+  // --- END OF NEW ---
 
   render();
   if (promptEl) promptEl.focus();
 
-  // 1. Пытаемся загрузить ID из sessionStorage
+  // 1. Try to load the ID from sessionStorage
   currentChatSessionId = sessionStorage.getItem(SS_SESSION_ID);
 
   if (chat.length === 0) {
-    // Если чат в localStorage ПУСТ, всегда начинаем новую сессию
-    addGreeting(); // Эта функция создаст новый ID
+    // If the chat in localStorage is EMPTY, always start a new session
+    addGreeting(); // This creates a new ID
   } else if (!currentChatSessionId) {
-    // Если чат НЕ пуст, но ID в sessionStorage НЕТ
+    // If the chat is NOT empty but there is NO ID in sessionStorage
     currentChatSessionId = getTimestampSessionId();
     sessionStorage.setItem(SS_SESSION_ID, currentChatSessionId);
     console.log('[Chat] New Session ID created for existing chat:', currentChatSessionId);
   } else {
-    // Чат загружен, ID сессии загружен.
+    // Chat loaded, session ID loaded.
     console.log('[Chat] Resuming Session ID:', currentChatSessionId);
   }
 
   setStatus('Ready.');
   if (promptEl) promptEl.focus();
 
-  // <--- УДАЛЕНО: Обработчики 'visibilitychange' и 'beforeunload' ---
+  // <--- REMOVED: 'visibilitychange' and 'beforeunload' handlers ---
   // ( ... )
-  // <--- КОНЕNDAY ИЗМЕНЕНИЯ ---
+  // <--- END OF CHANGE ---
 
 })();
